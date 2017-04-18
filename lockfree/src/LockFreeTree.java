@@ -16,7 +16,6 @@ public class LockFreeTree<T extends Comparable<T>> {
   }
 
   /**
-   * TODO
    * @param key
    * @return
    */
@@ -35,7 +34,6 @@ public class LockFreeTree<T extends Comparable<T>> {
   }
 
   /**
-   * TODO
    * @param key
    * @return
    */
@@ -67,7 +65,6 @@ public class LockFreeTree<T extends Comparable<T>> {
   }
 
   /**
-   * TODO
    * @param key
    * @return
    */
