@@ -1,13 +1,13 @@
 /**
  * Created by Margret on 4/17/2017.
  */
-package src;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.prefs.BackingStoreException;
 
 public class Main {
+
   public static void main(String[] args){
    /* LockFreeTree<Integer> tree = new LockFreeTree<Integer>();
      ArrayList<Integer> elements = generateElems(10);
@@ -129,7 +129,7 @@ public class Main {
       System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(executionTimes) + " ms");
       executionTimes.clear();*/
   }
-  
+
   public static double avg(ArrayList<Long> executionTimes){
       long sum = 0;
       for (Long l: executionTimes){
