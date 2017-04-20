@@ -104,17 +104,17 @@ public class Main {
       remExecuteTime.clear();
 
       // Part 2: test SkipList
-      /*for (int x = 0; x< numTrials; x++){
+      for (int x = 0; x< numTrials; x++){
           ConcurrentSkipListSet<Integer> skipList = new ConcurrentSkipListSet<Integer>();
           long startTime = System.currentTimeMillis();
           for (Integer i: elements){
               skipList.add(i);
           }
           long stopTime = System.currentTimeMillis();
-          executionTimes.add(stopTime-startTime);
+          addExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(executionTimes) + " ms");
-      executionTimes.clear();
+      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(addExecuteTime) + " ms");
+      addExecuteTime.clear();
 
       // Part 3: test TreeSet
       for (int x = 0; x< numTrials; x++){
@@ -124,10 +124,10 @@ public class Main {
               skipList.add(i);
           }
           long stopTime = System.currentTimeMillis();
-          executionTimes.add(stopTime-startTime);
+          findExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(executionTimes) + " ms");
-      executionTimes.clear();*/
+      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(findExecuteTime) + " ms");
+      findExecuteTime.clear();
   }
 
   public static double avg(ArrayList<Long> executionTimes){
