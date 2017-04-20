@@ -9,9 +9,8 @@ import java.util.concurrent.*;
 public class Main {
   public static void main(String[] args){
     LockFreeTree<Integer> tree = new LockFreeTree<Integer>();
-
-    //treeAddTest(tree, 1, 8, 0,10000);
-     ArrayList<Integer> elements = insertBalanced(100000);
+     ArrayList<Integer> elements = insertBalanced(10);
+     treeAddTest(tree, 1, 1, elements);
     /*int mid = 5;
     int len = 2;
 
@@ -51,30 +50,25 @@ public class Main {
   }
 
   // adds consecutive integers between start and end to tree
-    // note: end must be greater than start
-  public static void treeAddTest(LockFreeTree<Integer> LFtree, int numTrials, int numThreads, int start, int end){
+    // TODO: WORK ON EXCEPTION HANDLING, PROBABLY NEED TO WRITE TO DIFFERENT PARTS OF BST
+  public static void treeAddTest(LockFreeTree<Integer> LFtree, int numTrials, int numThreads, ArrayList<Integer> elements){
       System.out.println("Starting");
-      //final ExecutorService service;
-      //final Future<Long> timeTaken;
-      //ArrayList<Future<Long>> results= new ArrayList<Future<Long>>();
       ExecutorService pool = Executors.newFixedThreadPool(numThreads);
       Set<Future<Long>> set = new HashSet<Future<Long>>();
       //int mult = /(end - start);
       for (int i = 0; i < numTrials; i++){
           for (int j = 0; j < numThreads; j++){
               //service = Executors.newSingleThreadExecutor();
-              Callable<Long> addElemThr = new addElemTest(LFtree, start, end);
+              Callable<Long> addElemThr = new addElemTest(LFtree, elements);
               Future<Long> future = pool.submit(addElemThr);
               set.add(future);
-              end = j * end;
-              start = end;
               //results.add(service.submit(new addElemTest(LFtree, start, end)));
           }
 
       }
       for (Future<Long> time: set) {
           try {
-              System.out.println(time.get());
+             System.out.println(time.get()); // TODO: FIX THIS. CAUSES EXCEPTION!!!
           } catch (Exception e) {
               e.printStackTrace();
           }
@@ -122,12 +116,14 @@ public class Main {
 
   public static class addElemTest implements Callable<Long> {
       LockFreeTree LFtree;
-      int start, end;
+      ArrayList<Integer> elements;
+      //int start, end;
 
-      public addElemTest(LockFreeTree tree, int st, int e){
+      public addElemTest(LockFreeTree tree, ArrayList<Integer> e){
           LFtree = tree;
-          start = st;
-          end = e;
+          elements = e;
+          /*start = st;
+          end = e;*/
       }
       @Override
       public Long call(){
@@ -135,7 +131,7 @@ public class Main {
 
           //run test
           long startTime = System.currentTimeMillis();
-          for (int i = start; i < end; i++){
+          for (Integer i: elements){
               LFtree.add(i);
               //System.out.println("Added " + i);
           }
@@ -143,7 +139,7 @@ public class Main {
 
           // "start over" by removing elements from tree
           error = false;
-          for (int i = start; i < end; i++){
+          for (Integer i: elements){
               if (!LFtree.remove(i)){
                   System.out.println("Error removing element: " + i);
                   error = true;
@@ -188,13 +184,14 @@ public class Main {
           x++;
       }
       for (Integer i: BSTorder){
-          System.out.print(i+ ", ");
+          //System.out.print(i+ ", ");
           BSTList.add(i);
       }
 
       //test for duplicate elements in arraylist
       BSTList.remove(0);
-      System.out.println("\nBST array size: " + BSTList.size());
+      System.out.println("Below lengths should be the same:");
+      System.out.println("BST array size: " + BSTList.size());
       Set<Integer> foo = new HashSet<Integer>(BSTList);
       System.out.println("Set size: " + foo.size());
 
@@ -221,7 +218,6 @@ public class Main {
           numLeft--;
           return balancedHelper(midpt - (int)Math.pow(2, height -1),height/2, numLeft);
       }
-
 
   }*/
 
