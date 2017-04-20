@@ -1,3 +1,5 @@
+package src;
+
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -154,7 +156,7 @@ public class LockFreeTree<T extends Comparable<T>> {
         retry = false;
 
         AtomicReference<T> temp = curr.getReference().getKey();
-        currKey = temp.get();
+        currKey = (temp.get());
         int compare = key.compareTo(currKey);
         if(compare < 0){
           retStatus = FindResult.Status.NOTFOUND_L;
