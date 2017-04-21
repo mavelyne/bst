@@ -4,60 +4,217 @@
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.prefs.BackingStoreException;
 
 public class Main {
+
+  private static final boolean DEBUG = false;
 
   public static void main(String[] args){
    /* LockFreeTree<Integer> tree = new LockFreeTree<Integer>();
      ArrayList<Integer> elements = generateElems(10);
      treeAddTest(tree, 1, 2, elements);*/
-   test1(100000, 5);
-    /*int mid = 5;
-    int len = 2;
 
-    System.out.println("Starting");
+      // single threaded test
+      System.out.println("\nRunning Single Threaded Tests");
+      test1(100000, 5);
 
-    for(int i = 0; (mid + i < mid + len); i++){
-      boolean result = tree.add(i);
-      if(result){
-        System.out.println("Added " + i);
-      }else{
-        System.out.println("  Did not add " + i);
-      }
-      result = tree.contains(i);
-      if(result){
-        System.out.println("Contains " + i);
-      }else{
-        System.out.println("  Does not add " + i);
-      }
-    }
+      // low contention test
+      System.out.println("\nRunning Low Contention Tests");
+      test2(100000);
 
-    for(int i = 0; (mid + i < mid + len); i++){
-      boolean result = tree.remove(i);
-      if(result){
-        System.out.println("Removed " + i);
-      }else{
-        System.out.println("  Did remove add " + i);
-      }
-      result = tree.contains(i);
-      if(result){
-        System.out.println("  Contains " + i);
-      }else{
-        System.out.println("Does not contain " + i);
-      }
-    }
-
-    System.out.println("Done");*/
+      //TODO: High Contention Tests
   }
 
-  /* test 1: single threaded: add elements to BST in a balanced order and compare time to execute with skip lists and Java.util.TreeSet
-    inputs: numElements = number of elements to insert into BST
-            numTrials = number of trials to run for each BST. Function averages the times from <numTrials> trials
-    */
+	/**
+   * test2: Low Contention test using four threads
+   * @param numElements
+   */
+  public static void test2(int numElements){
+      Random rand = new Random();
+      int max = numElements * 100;
+      int q2 = numElements / 2;
+      int q1 = q2 / 2;
+      int q3 = q2 + q1;
+
+      List<Long> t1 = new ArrayList<Long>(), t2 = new ArrayList<Long>(), t3 = new ArrayList<Long>(), t4 = new ArrayList<Long>();
+      List<Integer> e1 = new ArrayList<Integer>(), e2 = new ArrayList<Integer>(), e3 = new ArrayList<Integer>(), e4 = new ArrayList<Integer>();
+      Thread thread1, thread2, thread3, thread4;
+      Collection<Integer> tree = new LockFreeTree<Integer>();
+
+      // initialize elements to count
+      e1.add(0);
+      e2.add(q1);
+      e3.add(q2);
+      e4.add(q3);
+      for(int i = 0; i < numElements/4; i++){
+          e1.add(rand.nextInt(q1));
+          e2.add(rand.nextInt(q1) + q1);
+          e3.add(rand.nextInt(q1) + q2);
+          e4.add(rand.nextInt(q1) + q3);
+      }
+
+
+      // test for add
+      tree = new LockFreeTree<Integer>();
+      thread1 = new TreeOpThread<Integer>(tree, e1, t1, TreeOpThread.Op.ADD);
+      thread2 = new TreeOpThread<Integer>(tree, e2, t2, TreeOpThread.Op.ADD);
+      thread3 = new TreeOpThread<Integer>(tree, e3, t3, TreeOpThread.Op.ADD);
+      thread4 = new TreeOpThread<Integer>(tree, e4, t4, TreeOpThread.Op.ADD);
+
+      thread1.start(); thread2.start(); thread3.start(); thread4.start();
+      try {
+          thread1.join(); thread2.join(); thread3.join(); thread4.join();
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      t1.addAll(t2); t1.addAll(t3); t1.addAll(t4);
+      double average = avg(t1, DEBUG); // multiply by 1000 to get ms from nanoseconds
+      System.out.println("Avg time for adding an element to LockFreeTree: " + average + " ns");
+
+      tree = new ConcurrentSkipListSet<Integer>();
+      thread1 = new TreeOpThread<Integer>(tree, e1, t1, TreeOpThread.Op.ADD);
+      thread2 = new TreeOpThread<Integer>(tree, e2, t2, TreeOpThread.Op.ADD);
+      thread3 = new TreeOpThread<Integer>(tree, e3, t3, TreeOpThread.Op.ADD);
+      thread4 = new TreeOpThread<Integer>(tree, e4, t4, TreeOpThread.Op.ADD);
+
+      thread1.start(); thread2.start(); thread3.start(); thread4.start();
+      try {
+          thread1.join(); thread2.join(); thread3.join(); thread4.join();
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      t1.addAll(t2); t1.addAll(t3); t1.addAll(t4);
+      average = avg(t1, DEBUG); // multiply by 1000 to get ms from nanoseconds
+      System.out.println("Avg time for adding an element to ConcurrentSkipList: " + average + " ns");
+
+      // test for contains
+      tree = new LockFreeTree<Integer>();
+      thread1 = new TreeOpThread<Integer>(tree, e1, t1, TreeOpThread.Op.CONTAINS);
+      thread2 = new TreeOpThread<Integer>(tree, e2, t2, TreeOpThread.Op.CONTAINS);
+      thread3 = new TreeOpThread<Integer>(tree, e3, t3, TreeOpThread.Op.CONTAINS);
+      thread4 = new TreeOpThread<Integer>(tree, e4, t4, TreeOpThread.Op.CONTAINS);
+
+      thread1.start(); thread2.start(); thread3.start(); thread4.start();
+      try {
+          thread1.join(); thread2.join(); thread3.join(); thread4.join();
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      t1.addAll(t2); t1.addAll(t3); t1.addAll(t4);
+      average = avg(t1, DEBUG); // multiply by 1000 to get ms from nanoseconds
+      System.out.println("Avg time for finding an element to LockFreeTree: " + average + " ns");
+
+      tree = new ConcurrentSkipListSet<Integer>();
+      thread1 = new TreeOpThread<Integer>(tree, e1, t1, TreeOpThread.Op.CONTAINS);
+      thread2 = new TreeOpThread<Integer>(tree, e2, t2, TreeOpThread.Op.CONTAINS);
+      thread3 = new TreeOpThread<Integer>(tree, e3, t3, TreeOpThread.Op.CONTAINS);
+      thread4 = new TreeOpThread<Integer>(tree, e4, t4, TreeOpThread.Op.CONTAINS);
+
+      thread1.start(); thread2.start(); thread3.start(); thread4.start();
+      try {
+          thread1.join(); thread2.join(); thread3.join(); thread4.join();
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      t1.addAll(t2); t1.addAll(t3); t1.addAll(t4);
+      average = avg(t1, DEBUG); // multiply by 1000 to get ms from nanoseconds
+      System.out.println("Avg time for finding an element to ConcurrentSkipListSet: " + average + " ns");
+
+      // test for remove
+      tree = new LockFreeTree<Integer>();
+      thread1 = new TreeOpThread<Integer>(tree, e1, t1, TreeOpThread.Op.REMOVE);
+      thread2 = new TreeOpThread<Integer>(tree, e2, t2, TreeOpThread.Op.REMOVE);
+      thread3 = new TreeOpThread<Integer>(tree, e3, t3, TreeOpThread.Op.REMOVE);
+      thread4 = new TreeOpThread<Integer>(tree, e4, t4, TreeOpThread.Op.REMOVE);
+
+      thread1.start(); thread2.start(); thread3.start(); thread4.start();
+      try {
+          thread1.join(); thread2.join(); thread3.join(); thread4.join();
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      t1.addAll(t2); t1.addAll(t3); t1.addAll(t4);
+      average = avg(t1, DEBUG); // multiply by 1000 to get ms from nanoseconds
+      System.out.println("Avg time for removing an element to LockFreeTree: " + average + " ns");
+
+      tree = new ConcurrentSkipListSet<Integer>();
+      thread1 = new TreeOpThread<Integer>(tree, e1, t1, TreeOpThread.Op.REMOVE);
+      thread2 = new TreeOpThread<Integer>(tree, e2, t2, TreeOpThread.Op.REMOVE);
+      thread3 = new TreeOpThread<Integer>(tree, e3, t3, TreeOpThread.Op.REMOVE);
+      thread4 = new TreeOpThread<Integer>(tree, e4, t4, TreeOpThread.Op.REMOVE);
+
+      thread1.start(); thread2.start(); thread3.start(); thread4.start();
+      try {
+          thread1.join(); thread2.join(); thread3.join(); thread4.join();
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      t1.addAll(t2); t1.addAll(t3); t1.addAll(t4);
+      average = avg(t1, DEBUG); // multiply by 1000 to get ms from nanoseconds
+      System.out.println("Avg time for removing an element to ConcurrentSkipListSet: " + average + " ns");
+
+  }
+
+	/**
+   * Runs a specified operation on a tree for all the elements given and logs the times
+    * @param <T>
+   */
+  public static class TreeOpThread<T> extends Thread{
+      Collection<T> tree;
+      List<T> elements;
+      List<Long> times;
+      public enum Op {ADD, CONTAINS, REMOVE};
+      Op op;
+
+      public TreeOpThread(Collection<T> tree, List<T> elements, List<Long> times, Op op) {
+          this.tree = tree;
+          this.elements = elements;
+          this.op = op;
+          this.times = times;
+          if(op != Op.ADD){
+              for(T element : this.elements){
+                  this.tree.add(element);
+              }
+          }
+      }
+
+      @Override
+      public void run(){
+          long start, end;
+          for(T element : elements){
+              start = System.nanoTime();
+              switch(this.op){
+                  case ADD:
+                      this.tree.add(element);
+                      break;
+                  case REMOVE:
+                      this.tree.remove(element);
+                      break;
+                  case CONTAINS:
+                      this.tree.contains(element);
+                      break;
+              }
+              end = System.nanoTime();
+              this.times.add(end-start);
+          }
+      }
+
+  }
+
+  /**
+   * test 1: single threaded: add elements to BST in a balanced order and compare time to execute with skip lists and Java.util.TreeSet
+   * inputs: numElements = number of elements to insert into BST
+             numTrials = number of trials to run for each BST. Function averages the times from <numTrials> trials
+  */
   public static void test1(int numElements, int numTrials){
       // Part 1: test LockFreeTree
-      ArrayList<Integer> elements = generateElems(numElements);
+      ArrayList<Integer> elements = generateElems(numElements, false);
       ArrayList<Long> addExecuteTime = new ArrayList<Long>();
       ArrayList<Long> findExecuteTime = new ArrayList<Long>();
       ArrayList<Long> remExecuteTime = new ArrayList<Long>();
@@ -83,9 +240,9 @@ public class Main {
           stopTime = System.currentTimeMillis();
           findExecuteTime.add(stopTime-startTime);
 
-          //TODO: REMOVE() CAUSES PROBLEMS
           // test removing elements
           startTime = System.currentTimeMillis();
+          Collections.reverse(elements);
           for (Integer i: elements){
               //System.out.println("Removing element " + i);
               if (!T1tree.remove(i)){
@@ -94,18 +251,19 @@ public class Main {
           }
           stopTime = System.currentTimeMillis();
           remExecuteTime.add(stopTime-startTime);
+          Collections.reverse(elements);
       }
 
-      System.out.println("Avg time for adding " + numElements + " elements to LockFreeTree: " + avg(addExecuteTime) + " ms");
-      System.out.println("Avg time for finding " + numElements + " elements to LockFreeTree: " + avg(findExecuteTime) + " ms");
-      System.out.println("Avg time for removing " + numElements + " elements to LockFreeTree: " + avg(remExecuteTime) + " ms");
+      System.out.println("Avg time for adding " + numElements + " elements to LockFreeTree: " + avg(addExecuteTime, DEBUG) + " ms");
+      System.out.println("Avg time for finding " + numElements + " elements to LockFreeTree: " + avg(findExecuteTime, DEBUG) + " ms");
+      System.out.println("Avg time for removing " + numElements + " elements to LockFreeTree: " + avg(remExecuteTime, DEBUG) + " ms");
       addExecuteTime.clear();
       findExecuteTime.clear();
       remExecuteTime.clear();
 
       // Part 2: test SkipList
+      ConcurrentSkipListSet<Integer> skipList = new ConcurrentSkipListSet<Integer>();
       for (int x = 0; x< numTrials; x++){
-          ConcurrentSkipListSet<Integer> skipList = new ConcurrentSkipListSet<Integer>();
           long startTime = System.currentTimeMillis();
           for (Integer i: elements){
               skipList.add(i);
@@ -113,29 +271,41 @@ public class Main {
           long stopTime = System.currentTimeMillis();
           addExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(addExecuteTime) + " ms");
+      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(addExecuteTime,DEBUG) + " ms");
       addExecuteTime.clear();
 
       // Part 3: test TreeSet
       for (int x = 0; x< numTrials; x++){
-          ConcurrentSkipListSet<Integer> skipList = new ConcurrentSkipListSet<Integer>();
           long startTime = System.currentTimeMillis();
           for (Integer i: elements){
-              skipList.add(i);
+              skipList.contains(i);
           }
           long stopTime = System.currentTimeMillis();
           findExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(findExecuteTime) + " ms");
+      System.out.println("Avg time for finding " + numElements + " elements to ConcurrentSkipList: " + avg(findExecuteTime, DEBUG) + " ms");
       findExecuteTime.clear();
+      // Part 3: test TreeSet
+      for (int x = 0; x< numTrials; x++){
+          long startTime = System.currentTimeMillis();
+          for (Integer i: elements){
+              skipList.remove(i);
+          }
+          long stopTime = System.currentTimeMillis();
+          remExecuteTime.add(stopTime-startTime);
+      }
+      System.out.println("Avg time for removing " + numElements + " elements to ConcurrentSkipList: " + avg(remExecuteTime, DEBUG) + " ms");
+      remExecuteTime.clear();
+
   }
 
-  public static double avg(ArrayList<Long> executionTimes){
+  public static double avg(List<Long> executionTimes, boolean print){
       long sum = 0;
       for (Long l: executionTimes){
-          System.out.print(l + " ");
+          if(print) System.out.print(l + " ");
           sum += l;
       }
+      if(print) System.out.print("\t");
       return (double)sum/executionTimes.size();
   }
 
@@ -247,20 +417,21 @@ public class Main {
       }
   }
 
-
   /**
    * generates number of elements to insert into BST
    * @param numElements
    * @return
    */
-  static ArrayList<Integer> generateElems(int numElements){
+  static ArrayList<Integer> generateElems(int numElements, boolean print){
       //find height of binary tree
       int height = 0;
       while (numElements > Math.pow(2,height)){
           height++;
       }
-      System.out.println("========generateElems=======");
-      System.out.println("Tree Height = " + height);
+      if(print){
+          System.out.println("========generateElems=======");
+          System.out.println("Tree Height = " + height);
+      }
 
       ArrayList<Integer> BSTList = new ArrayList<Integer>(numElements);
       int[] BSTorder = new int[numElements + 1];
@@ -284,22 +455,26 @@ public class Main {
           x++;
       }
       for (Integer i: BSTorder){
-          System.out.print(i+ ", ");
+          if(print) System.out.print(i+ ", ");
           BSTList.add(i);
       }
 
       //test for duplicate elements in arraylist
       BSTList.remove(0);
+      Set<Integer> foo = new HashSet<Integer>(BSTList);
+
       System.out.println("Below sizes should be the same:");
       System.out.println("BST array size: " + BSTList.size());
-      Set<Integer> foo = new HashSet<Integer>(BSTList);
       System.out.println("Set size: " + foo.size());
-      if (BSTList.size() == foo.size())
-          System.out.println("Looks good to me");
 
-      else
-          System.out.println("Error in generating BST elements.");
-      System.out.println("============================");
+      if (BSTList.size() == foo.size()) {
+          if(print) System.out.println("Looks good to me");
+      }else{
+          if(print) System.out.println("Error in generating BST elements.");
+      }
+
+      if(print) System.out.println("============================");
+
       return BSTList;
   }
 
