@@ -1,3 +1,5 @@
+import java.util.concurrent.locks.*;
+
 public class FineLockTree {
 	
 	class Node{
@@ -13,6 +15,7 @@ public class FineLockTree {
 	}
 	
 	private Node root;
+	private ReentrantLock topLock;
 	
 	public FineLockTree(){
 		root = null;
@@ -89,29 +92,50 @@ public class FineLockTree {
 	  }
 	  
 	  
-    public Node delete(Node n, int x)
+    public Node delete(int x)
     {
-	    if(n == null)
-	    	return null;
-	    else if (n.element == x) 
-        {
-           if (n.left == null)
-               return n.right;
-           else if (n.right == null)
-        	   return n.left;
-           else
-           { 
-        	   n.left = move(n.left, n);
-        	   return n;
-           }
-        }
-	    else
-	    {
-	        if (x < n.element)
-	          n.left = delete(n.left, x);
-	        else
-	          n.right = delete(n.right, x);
-	        return n;
-	    } 
+    	Node n = this.root;
+    	while (true)
+    	{
+		    if(n == null)
+		    	return null;
+		    else if (n.element == x) 
+	        {
+	           if (n.left == null)
+	           {
+	        	   n.right = move(n.right, n);
+	               return n;
+	           }
+	           else
+	           { 
+	        	   n.left = move(n.left, n);
+	        	   return n;
+	           }
+	        }
+		    else
+		    {
+		        if (x < n.element)
+		         n = n.left;
+		        else
+		         n = n.right;
+
+		    }
+    	}
+    }
+    
+    public static void main(String args[])
+    {
+    	FineLockTree f = new FineLockTree();
+    	f.insert(9);
+    	f.insert(10);
+    	f.insert(8);
+    	f.insert(6);
+    	f.insert(4);
+    	f.insert(7);
+    	f.insert(11);
+    	f.insert(12);
+    	System.out.println(f.delete(9));
+    	System.out.println(f.root.left.right.element);
+    	
     }
 }
