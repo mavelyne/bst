@@ -1,7 +1,7 @@
 /**
  * Created by Margret on 4/17/2017.
  */
-
+package src;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -20,39 +20,52 @@ public class Main {
 
       // low contention test
       System.out.println("\nRunning Low Contention Tests");
-      test2(100000);
+      test2(100000, true);
 
       //TODO: High Contention Tests
+      System.out.println("\nRunning High Contention Tests");
+      test2(10, false);
   }
 
 	/**
    * test2: Low Contention test using four threads
    * @param numElements
+     @param isTest2: true will run test2, false will run test3
    */
-  public static void test2(int numElements){
+  public static void test2(int numElements, boolean isTest2){
       Random rand = new Random();
-      int max = numElements * 100;
-      int q2 = numElements / 2;
-      int q1 = q2 / 2;
-      int q3 = q2 + q1;
-
+      Collection<Integer> tree = new LockFreeTree<Integer>();
+      Thread thread1, thread2, thread3, thread4;
       List<Long> t1 = new ArrayList<Long>(), t2 = new ArrayList<Long>(), t3 = new ArrayList<Long>(), t4 = new ArrayList<Long>();
       List<Integer> e1 = new ArrayList<Integer>(), e2 = new ArrayList<Integer>(), e3 = new ArrayList<Integer>(), e4 = new ArrayList<Integer>();
-      Thread thread1, thread2, thread3, thread4;
-      Collection<Integer> tree = new LockFreeTree<Integer>();
 
-      // initialize elements to count
-      e1.add(0);
-      e2.add(q1);
-      e3.add(q2);
-      e4.add(q3);
-      for(int i = 0; i < numElements/4; i++){
-          e1.add(rand.nextInt(q1));
-          e2.add(rand.nextInt(q1) + q1);
-          e3.add(rand.nextInt(q1) + q2);
-          e4.add(rand.nextInt(q1) + q3);
+      if (isTest2){
+          int max = numElements * 100;
+          int q2 = numElements / 2;
+          int q1 = q2 / 2;
+          int q3 = q2 + q1;
+
+          // initialize elements to count
+          e1.add(0);
+          e2.add(q1);
+          e3.add(q2);
+          e4.add(q3);
+          for(int i = 0; i < numElements/4; i++){
+              e1.add(rand.nextInt(q1));
+              e2.add(rand.nextInt(q1) + q1);
+              e3.add(rand.nextInt(q1) + q2);
+              e4.add(rand.nextInt(q1) + q3);
+          }
       }
-
+      else{
+          ArrayList<Integer> elems = generateElems(numElements,false);
+          for (int i =0; i < numElements/4; i++){
+              e1.add(elems.get(rand.nextInt(elems.size())));
+              e2.add(elems.get(rand.nextInt(elems.size())));
+              e3.add(elems.get(rand.nextInt(elems.size())));
+              e4.add(elems.get(rand.nextInt(elems.size())));
+          }
+      }
 
       // test for add
       tree = new LockFreeTree<Integer>();
@@ -274,7 +287,6 @@ public class Main {
       System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(addExecuteTime,DEBUG) + " ms");
       addExecuteTime.clear();
 
-      // Part 3: test TreeSet
       for (int x = 0; x< numTrials; x++){
           long startTime = System.currentTimeMillis();
           for (Integer i: elements){
@@ -285,7 +297,7 @@ public class Main {
       }
       System.out.println("Avg time for finding " + numElements + " elements to ConcurrentSkipList: " + avg(findExecuteTime, DEBUG) + " ms");
       findExecuteTime.clear();
-      // Part 3: test TreeSet
+
       for (int x = 0; x< numTrials; x++){
           long startTime = System.currentTimeMillis();
           for (Integer i: elements){
@@ -296,7 +308,6 @@ public class Main {
       }
       System.out.println("Avg time for removing " + numElements + " elements to ConcurrentSkipList: " + avg(remExecuteTime, DEBUG) + " ms");
       remExecuteTime.clear();
-
   }
 
   public static double avg(List<Long> executionTimes, boolean print){
@@ -327,7 +338,6 @@ public class Main {
               set.add(future);
               //results.add(service.submit(new addElemTest(LFtree, start, end)));
           }
-
       }
       for (Future<Long> time: set) {
           try {
