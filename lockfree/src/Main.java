@@ -85,7 +85,7 @@ public class Main {
 
           //TODO: REMOVE() CAUSES PROBLEMS
           // test removing elements
-          /*startTime = System.currentTimeMillis();
+          startTime = System.currentTimeMillis();
           for (Integer i: elements){
               //System.out.println("Removing element " + i);
               if (!T1tree.remove(i)){
@@ -93,12 +93,12 @@ public class Main {
               }
           }
           stopTime = System.currentTimeMillis();
-          remExecuteTime.add(stopTime-startTime);*/
+          remExecuteTime.add(stopTime-startTime);
       }
 
       System.out.println("Avg time for adding " + numElements + " elements to LockFreeTree: " + avg(addExecuteTime) + " ms");
       System.out.println("Avg time for finding " + numElements + " elements to LockFreeTree: " + avg(findExecuteTime) + " ms");
-      //System.out.println("Avg time for removing " + numElements + " elements to LockFreeTree: " + avg(remExecuteTime) + " ms");
+      System.out.println("Avg time for removing " + numElements + " elements to LockFreeTree: " + avg(remExecuteTime) + " ms");
       addExecuteTime.clear();
       findExecuteTime.clear();
       remExecuteTime.clear();
@@ -138,6 +138,7 @@ public class Main {
       }
       return (double)sum/executionTimes.size();
   }
+
   // adds consecutive integers between start and end to tree
   public static void treeAddTest(LockFreeTree<Integer> LFtree, int numTrials, int numThreads, ArrayList<Integer> elements){
       System.out.println("Starting");
@@ -245,7 +246,13 @@ public class Main {
           return (long)(-1);
       }
   }
-   //function generates number of elements to insert into BST
+
+
+  /**
+   * generates number of elements to insert into BST
+   * @param numElements
+   * @return
+   */
   static ArrayList<Integer> generateElems(int numElements){
       //find height of binary tree
       int height = 0;

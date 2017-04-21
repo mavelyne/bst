@@ -1,3 +1,5 @@
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -6,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Implementation of Howley and Jones Non-Blocking Internal Binary Search Tree
  * Marked references are "NULL" references as described in algorithm to avoid ABA problems
  */
-public class LockFreeTree<T extends Comparable<T>> {
+public class LockFreeTree<T extends Comparable<T>> implements Collection<T> {
 
   AtomicMarkableReference<Node> root; // right child is the head of the tree
 
@@ -33,6 +35,7 @@ public class LockFreeTree<T extends Comparable<T>> {
     return retval;
   }
 
+  @Override
   /**
    * @param key
    * @return
@@ -99,8 +102,8 @@ public class LockFreeTree<T extends Comparable<T>> {
         replaceOp = found.getCurrOp();
         if(found.getStatus() == FindResult.Status.ABORT ||
             (curr.getReference().getOperation().get() != currOp.get())) continue;
-
-        relocOp.set(new RelocateOperation(curr, currOp, key, replace.getReference().getKey()));
+        T replaceKey = (T) replace.getReference().getKey().get();
+        relocOp.set(new RelocateOperation<T>(curr, currOp, key, replaceKey));
         if(replace.getReference().getOperation().compareAndSet(replaceOp.get(), relocOp)){
           if(helpRelocate(relocOp, pred, predOp, replace)) return true;
         }
@@ -154,13 +157,8 @@ public class LockFreeTree<T extends Comparable<T>> {
         retry = false;
 
         AtomicReference<T> temp = curr.getReference().getKey();
-        try{
-          currKey = temp.get();
-        }catch(ClassCastException e){
-          //System.out.println(e.toString());
-          temp = (AtomicReference<T>) temp.get();
-          currKey = temp.get();
-        }
+        currKey = temp.get();
+
         int compare = key.compareTo(currKey);
         if(compare < 0){
           retStatus = FindResult.Status.NOTFOUND_L;
@@ -206,7 +204,7 @@ public class LockFreeTree<T extends Comparable<T>> {
   }
 
   private boolean helpRelocate(AtomicReference<Operation> currOp, AtomicMarkableReference<Node> pred, AtomicReference<Operation> predOp, AtomicMarkableReference<Node> curr){
-    RelocateOperation op = (RelocateOperation) currOp.get();
+    RelocateOperation<T> op = (RelocateOperation<T>) currOp.get();
     RelocateOperation.State seenState = op.getState().get();
 
     if(seenState.equals(RelocateOperation.State.ONGOING)){
@@ -356,7 +354,7 @@ public class LockFreeTree<T extends Comparable<T>> {
   /**
     Operation classes keep track of what operation is being performed on the node
    */
-  private static abstract class Operation{
+  private static class Operation{
     boolean isNone(){return false;}
     boolean isMarked(){return false;}
     boolean isChildCAS(){return false;}
@@ -388,16 +386,16 @@ public class LockFreeTree<T extends Comparable<T>> {
       return update;
     }
   }
-  private static class RelocateOperation extends Operation{
+  private static class RelocateOperation<T> extends Operation{
     public enum State{FAILED, ONGOING, SUCCESS};
     private AtomicReference<State> state;
     private AtomicMarkableReference<Node> dest;
     private AtomicReference<Operation> destOp;
-    private Object removeKey;
-    private Object replaceKey;
+    private T removeKey;
+    private T replaceKey;
     boolean isRelocate(){return true;}
 
-    public RelocateOperation(AtomicMarkableReference<Node> dest, AtomicReference<Operation> destOp, Object removeKey, Object replaceKey) {
+    public RelocateOperation(AtomicMarkableReference<Node> dest, AtomicReference<Operation> destOp, T removeKey, T replaceKey) {
       this.state = new AtomicReference<State>(State.ONGOING);
       this.dest = dest;
       this.destOp = destOp;
@@ -417,12 +415,127 @@ public class LockFreeTree<T extends Comparable<T>> {
       return destOp;
     }
 
-    public Object getRemoveKey() {
+    public T getRemoveKey() {
       return removeKey;
     }
 
-    public Object getReplaceKey() {
+    public T getReplaceKey() {
       return replaceKey;
     }
   }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public int size() {
+    return 0;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public boolean isEmpty() {
+    return false;
+  }
+
+  @Override
+  public boolean contains(Object o) {
+    try{
+      T key = (T) o;
+      return contains(key);
+    }catch(ClassCastException e){
+      return false;
+    }
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public Iterator<T> iterator() {
+    return null;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public Object[] toArray() {
+    return new Object[0];
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public <T1> T1[] toArray(T1[] a) {
+    return null;
+  }
+
+  @Override
+  public boolean remove(Object o) {
+    try{
+      T key = (T) o;
+      return remove(key);
+    }catch(ClassCastException e){
+      return false;
+    }
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public boolean containsAll(Collection<?> c) {
+    return false;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public boolean addAll(Collection<? extends T> c) {
+    return false;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public boolean removeAll(Collection<?> c) {
+    return false;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public boolean retainAll(Collection<?> c) {
+    return false;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public void clear() {}
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public boolean equals(Object o) {
+    return false;
+  }
+
+  @Override
+  /**
+   * NOT SUPPORTED
+   */
+  public int hashCode() {
+    return 0;
+  }
+
 }
