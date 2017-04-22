@@ -1,4 +1,4 @@
-package src;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicMarkableReference;
@@ -205,6 +205,7 @@ public class LockFreeTree<T extends Comparable<T>> implements Collection<T> {
   }
 
   private boolean helpRelocate(AtomicReference<Operation> currOp, AtomicMarkableReference<Node> pred, AtomicReference<Operation> predOp, AtomicMarkableReference<Node> curr){
+    if(!currOp.get().isRelocate()) return false; // TODO: Review
     RelocateOperation<T> op = (RelocateOperation<T>) currOp.get();
     RelocateOperation.State seenState = op.getState().get();
 

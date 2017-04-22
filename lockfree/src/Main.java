@@ -1,7 +1,7 @@
 /**
  * Created by Margret on 4/17/2017.
  */
-package src;
+
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -267,9 +267,9 @@ public class Main {
           Collections.reverse(elements);
       }
 
-      System.out.println("Avg time for adding " + numElements + " elements to LockFreeTree: " + avg(addExecuteTime, DEBUG) + " ms");
-      System.out.println("Avg time for finding " + numElements + " elements to LockFreeTree: " + avg(findExecuteTime, DEBUG) + " ms");
-      System.out.println("Avg time for removing " + numElements + " elements to LockFreeTree: " + avg(remExecuteTime, DEBUG) + " ms");
+      System.out.println("Avg time for adding an element to LockFreeTree: " + avg(addExecuteTime, DEBUG)/numElements*1000 + " ns");
+      System.out.println("Avg time for finding an element to LockFreeTree: " + avg(findExecuteTime, DEBUG)/numElements*1000 + " ns");
+      System.out.println("Avg time for removing an element to LockFreeTree: " + avg(remExecuteTime, DEBUG)/numElements*1000 + " ns");
       addExecuteTime.clear();
       findExecuteTime.clear();
       remExecuteTime.clear();
@@ -284,7 +284,7 @@ public class Main {
           long stopTime = System.currentTimeMillis();
           addExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for adding " + numElements + " elements to ConcurrentSkipList: " + avg(addExecuteTime,DEBUG) + " ms");
+      System.out.println("Avg time for adding an element to ConcurrentSkipList: " + avg(addExecuteTime, DEBUG)/numElements*1000 + " ns");
       addExecuteTime.clear();
 
       for (int x = 0; x< numTrials; x++){
@@ -295,7 +295,7 @@ public class Main {
           long stopTime = System.currentTimeMillis();
           findExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for finding " + numElements + " elements to ConcurrentSkipList: " + avg(findExecuteTime, DEBUG) + " ms");
+      System.out.println("Avg time for finding an element to ConcurrentSkipList: " + avg(findExecuteTime, DEBUG)/numElements*1000 + " ns");
       findExecuteTime.clear();
 
       for (int x = 0; x< numTrials; x++){
@@ -306,7 +306,7 @@ public class Main {
           long stopTime = System.currentTimeMillis();
           remExecuteTime.add(stopTime-startTime);
       }
-      System.out.println("Avg time for removing " + numElements + " elements to ConcurrentSkipList: " + avg(remExecuteTime, DEBUG) + " ms");
+      System.out.println("Avg time for removing an element to ConcurrentSkipList: " + avg(remExecuteTime, DEBUG)/numElements*1000 + " ns");
       remExecuteTime.clear();
   }
 
@@ -473,9 +473,11 @@ public class Main {
       BSTList.remove(0);
       Set<Integer> foo = new HashSet<Integer>(BSTList);
 
-      System.out.println("Below sizes should be the same:");
-      System.out.println("BST array size: " + BSTList.size());
-      System.out.println("Set size: " + foo.size());
+      if(print){
+          System.out.println("Below sizes should be the same:");
+          System.out.println("BST array size: " + BSTList.size());
+          System.out.println("Set size: " + foo.size());
+      }
 
       if (BSTList.size() == foo.size()) {
           if(print) System.out.println("Looks good to me");
