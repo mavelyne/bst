@@ -6,11 +6,21 @@ public class FineLockTree {
 		int element;
 		Node left;
 		Node right;	
+		ReentrantLock nodeLock;
 		
 		public Node(int x){
 			element = x;
 			left = null;
 			right = null;
+			nodeLock = new ReentrantLock();
+		}
+		
+		public void lock(){
+			this.nodeLock.lock();
+		}
+		
+		public void unlock(){
+			this.nodeLock.unlock();
 		}
 	}
 	
@@ -19,20 +29,28 @@ public class FineLockTree {
 	
 	public FineLockTree(){
 		root = null;
+		topLock = new ReentrantLock();
 	}
 	
 	public boolean contains(int x){
 		Node current = root;
-		while(current != null)
-		{
-			if(current.element == x)		
-				return true;
-			else if(current.element > x)
-				current = current.left;		
-			else
-				current = current.right;
+		topLock.lock();
+		try{
+			while(current != null)
+			{
+				if(current.element == x)		
+					return true;
+				else if(current.element > x)
+					current = current.left;		
+				else
+					current = current.right;
+			}
+			return false;
 		}
-		return false;
+		finally{
+			topLock.unlock();
+		}
+		
 	}
 	
 	public Node insert(int x){
@@ -43,39 +61,50 @@ public class FineLockTree {
 		}
 		catch(IllegalArgumentException e){System.err.println(e);}
 		Node newNode = new Node(x);
-		if(root == null)
-		{
-			root = newNode;
-			return newNode;
-		}
-		else
-		{
-			Node current = root;
-			Node parent = null;
-			while(true)
+		topLock.lock();
+			if(root == null)
 			{
-				parent = current;
-				if(x < current.element)
-				{				
-					current = current.left;
-					if(current == null)
-					{
-						parent.left = newNode;
-						return newNode;
-					}
-				}
-				else
+				root = newNode;
+				topLock.unlock();
+				return newNode;
+			}
+			else
+			{
+				Node current = root;
+				Node parent = null;
+				topLock.unlock();
+				current.lock();
+				while(true)
 				{
-					current = current.right;
-					if(current == null)
-					{
-						parent.right = newNode;
-						return newNode;
+					parent = current;
+					current.unlock();
+					parent.lock();
+					if(x < current.element)
+					{				
+						current = current.left;
+						if(current == null)
+						{
+							parent.left = newNode;
+							parent.unlock();
+							return newNode;
+						}
 					}
+					else
+					{
+						current = current.right;
+						if(current == null)
+						{
+							parent.right = newNode;
+							parent.unlock();
+							return newNode;
+						}
+					}
+					current.lock();
 				}
 			}
-		}
+		
 	}
+		
 	
 	public Node move(Node n, Node d)
 	  {
@@ -91,34 +120,49 @@ public class FineLockTree {
 	     }
 	  }
 	  
-	  
-    public Node delete(int x)
+	public Node delete(int x)
     {
+		Node ans = null;
     	Node n = this.root;
-    	while (true)
+    	topLock.lock();
+		while (true)
     	{
 		    if(n == null)
 		    	return null;
 		    else if (n.element == x) 
 	        {
+		       n.lock();
 	           if (n.left == null)
 	           {
+	        	   ans = new Node(n.element);
 	        	   n.right = move(n.right, n);
-	               return n;
+	        	   n.unlock();
+	               return ans;
 	           }
 	           else
 	           { 
+	        	   ans = new Node(n.element);
 	        	   n.left = move(n.left, n);
-	        	   return n;
+	        	   n.unlock();
+	        	   return ans;
 	           }
 	        }
 		    else
 		    {
+		    	topLock.unlock();
+		    	n.lock();
 		        if (x < n.element)
-		         n = n.left;
+		        {
+		        	n = n.left;
+		        	n.unlock();
+		        }
+		         
 		        else
-		         n = n.right;
-
+		        {
+		        	n = n.right;
+		        	n.unlock();
+		        }
+		         
 		    }
     	}
     }
@@ -134,7 +178,7 @@ public class FineLockTree {
     	f.insert(7);
     	f.insert(11);
     	f.insert(12);
-    	System.out.println(f.delete(9));
+    	System.out.println(f.delete(9).element);
     	System.out.println(f.root.left.right.element);
     	
     }
