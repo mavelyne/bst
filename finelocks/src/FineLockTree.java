@@ -1,6 +1,8 @@
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.locks.*;
 
-public class FineLockTree {
+public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 	
 	class Node{
 		int element;
@@ -54,12 +56,6 @@ public class FineLockTree {
 	}
 	
 	public Node insert(int x){
-		try{
-			boolean exists = this.contains(x);
-			if(exists)
-				throw new IllegalArgumentException("Error: Already Exists");
-		}
-		catch(IllegalArgumentException e){System.err.println(e);}
 		Node newNode = new Node(x);
 		topLock.lock();
 			if(root == null)
@@ -166,20 +162,82 @@ public class FineLockTree {
 		    }
     	}
     }
-    
-    public static void main(String args[])
-    {
-    	FineLockTree f = new FineLockTree();
-    	f.insert(9);
-    	f.insert(10);
-    	f.insert(8);
-    	f.insert(6);
-    	f.insert(4);
-    	f.insert(7);
-    	f.insert(11);
-    	f.insert(12);
-    	System.out.println(f.delete(9).element);
-    	System.out.println(f.root.left.right.element);
-    	
-    }
+
+	@Override
+	public int size() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Iterator<T> iterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object[] toArray() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T> T[] toArray(T[] a) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean add(T e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean remove(Object o) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends T> c) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+		
+	}
 }
