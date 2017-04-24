@@ -5,12 +5,12 @@ import java.util.concurrent.locks.*;
 public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 	
 	class Node{
-		int element;
+		T element;
 		Node left;
 		Node right;	
 		ReentrantLock nodeLock;
 		
-		public Node(int x){
+		public Node(T x){
 			element = x;
 			left = null;
 			right = null;
@@ -34,15 +34,15 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 		topLock = new ReentrantLock();
 	}
 	
-	public boolean contains(int x){
+	public boolean contains(T x){
 		Node current = root;
 		topLock.lock();
 		try{
 			while(current != null)
 			{
-				if(current.element == x)		
+				if(current.element.equals(x))		
 					return true;
-				else if(current.element > x)
+				else if(current.element.compareTo(x) > 0)
 					current = current.left;		
 				else
 					current = current.right;
@@ -55,7 +55,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 		
 	}
 	
-	public Node insert(int x){
+	public Node insert(T x){
 		Node newNode = new Node(x);
 		topLock.lock();
 			if(root == null)
@@ -75,7 +75,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 					parent = current;
 					current.unlock();
 					parent.lock();
-					if(x < current.element)
+					if(x.compareTo(current.element) < 0)
 					{				
 						current = current.left;
 						if(current == null)
@@ -116,7 +116,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 	     }
 	  }
 	  
-	public Node delete(int x)
+	public Node delete(T x)
     {
 		Node ans = null;
     	Node n = this.root;
@@ -125,7 +125,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
     	{
 		    if(n == null)
 		    	return null;
-		    else if (n.element == x) 
+		    else if (n.element.equals(x)) 
 	        {
 		       n.lock();
 	           if (n.left == null)
@@ -147,7 +147,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 		    {
 		    	topLock.unlock();
 		    	n.lock();
-		        if (x < n.element)
+		        if (x.compareTo(n.element) < 0)
 		        {
 		        	n = n.left;
 		        	n.unlock();
@@ -201,13 +201,13 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 
 	@Override
 	public boolean add(T e) {
-		// TODO Auto-generated method stub
+		insert(e);
 		return false;
 	}
 
 	@Override
 	public boolean remove(Object o) {
-		// TODO Auto-generated method stub
+		delete((T)(o));
 		return false;
 	}
 
