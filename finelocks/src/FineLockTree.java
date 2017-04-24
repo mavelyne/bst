@@ -56,6 +56,8 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 	}
 	
 	public Node insert(T x){
+		if (contains(x))
+			return null;
 		Node newNode = new Node(x);
 		topLock.lock();
 			if(root == null)
@@ -67,32 +69,36 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 			else
 			{
 				Node current = root;
-				Node parent = null;
 				topLock.unlock();
 				current.lock();
 				while(true)
 				{
-					parent = current;
-					current.unlock();
-					parent.lock();
 					if(x.compareTo(current.element) < 0)
-					{				
-						current = current.left;
-						if(current == null)
+					{
+						if(current.left == null)
 						{
-							parent.left = newNode;
-							parent.unlock();
+							current.left = newNode;
+							current.unlock();
 							return newNode;
+						}
+						else
+						{
+							current.unlock();
+							current = current.left;
 						}
 					}
 					else
 					{
-						current = current.right;
-						if(current == null)
+						if(current.right == null)
 						{
-							parent.right = newNode;
-							parent.unlock();
+							current.right = newNode;
+							current.unlock();
 							return newNode;
+						}
+						else
+						{
+							current.unlock();
+							current = current.right;
 						}
 					}
 					current.lock();
@@ -118,9 +124,12 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 	  
 	public Node delete(T x)
     {
+		if (contains(x) == false)
+			return null;
+    	topLock.lock();
 		Node ans = null;
     	Node n = this.root;
-    	topLock.lock();
+    	topLock.unlock();
 		while (true)
     	{
 		    if(n == null)
@@ -128,14 +137,19 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 		    else if (n.element.equals(x)) 
 	        {
 		       n.lock();
-	           if (n.left == null)
+		       if (n.left == null && n.right == null)
+		       {
+		    	   ans = new Node(n.element);
+		    	   return ans;
+		       }
+	           if (n.left == null && n.right != null)
 	           {
 	        	   ans = new Node(n.element);
 	        	   n.right = move(n.right, n);
 	        	   n.unlock();
 	               return ans;
 	           }
-	           else
+	           else if (n.left != null)
 	           { 
 	        	   ans = new Node(n.element);
 	        	   n.left = move(n.left, n);
@@ -145,18 +159,17 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 	        }
 		    else
 		    {
-		    	topLock.unlock();
 		    	n.lock();
 		        if (x.compareTo(n.element) < 0)
 		        {
-		        	n = n.left;
 		        	n.unlock();
-		        }
-		         
+		        	n = n.left;
+
+		        }		         
 		        else
 		        {
-		        	n = n.right;
 		        	n.unlock();
+		        	n = n.right;
 		        }
 		         
 		    }
@@ -177,8 +190,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 
 	@Override
 	public boolean contains(Object o) {
-		// TODO Auto-generated method stub
-		return false;
+		return contains((T)(o));
 	}
 
 	@Override
@@ -207,26 +219,31 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 
 	@Override
 	public boolean remove(Object o) {
-		delete((T)(o));
+		Node n = delete((T)(o));
+		if (n != null)
+			return true;
 		return false;
 	}
 
 	@Override
 	public boolean containsAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
+		for (Object elem : c)
+			contains(elem);
+		return true;
 	}
 
 	@Override
 	public boolean addAll(Collection<? extends T> c) {
-		// TODO Auto-generated method stub
-		return false;
+		for (T elem : c)
+			add(elem);
+		return true;
 	}
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
+		for (Object elem : c)
+			remove(elem);
+		return true;
 	}
 
 	@Override
