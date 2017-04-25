@@ -140,6 +140,7 @@ public class FineLockTree<T extends Comparable<T>> implements Collection<T>{
 		       if (n.left == null && n.right == null)
 		       {
 		    	   ans = new Node(n.element);
+		    	   n.unlock();
 		    	   return ans;
 		       }
 	           if (n.left == null && n.right != null)
